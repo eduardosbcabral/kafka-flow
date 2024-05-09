@@ -72,7 +72,7 @@ public abstract class BaseKafkaWorker<TKey, TValue> : BackgroundService
                     result = consumer.Consume(stoppingToken);
                     if (result.Message != null)
                     {
-                        _logger.LogDebug("Processing message from {TopicPartitionOffset}.", result.TopicPartitionOffset);
+                        _logger.LogInformation("Processing message from {TopicPartitionOffset}.", result.TopicPartitionOffset);
 
                         try
                         {

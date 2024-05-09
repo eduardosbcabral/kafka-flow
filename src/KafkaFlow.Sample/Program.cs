@@ -22,10 +22,13 @@ var builder = Host.CreateDefaultBuilder(args)
         });
 
         //var consumer2Config = host.Configuration.GetRequiredSection("Consumer2");
-        //services.ConfigureHttpKafkaWorker<string, AnotherSampleMessage>(consumer2Config, x =>
+        //services.ConfigureDefaultHttpKafkaWorker<string, AnotherSampleMessage>(consumer2Config, x =>
         //{
         //    x.EnableAutoCommit = false;
         //    x.AutoOffsetReset = AutoOffsetReset.Latest;
+        //}, new System.Text.Json.JsonSerializerOptions()
+        //{
+        //    PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
         //});
     });
 

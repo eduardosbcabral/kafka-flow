@@ -16,7 +16,7 @@ namespace KafkaFlow.Consumer;
 
 public static class ServiceCollectionConsumerExtensions
 {
-    public static IServiceCollection ConfigureHttpKafkaWorker<TKey, TValue>(
+    public static IServiceCollection ConfigureDefaultHttpKafkaWorker<TKey, TValue>(
         this IServiceCollection services,
         IConfigurationSection section,
         Action<ConsumerOptions<TKey, TValue>>? customConsumerConfig = null,
@@ -29,7 +29,7 @@ public static class ServiceCollectionConsumerExtensions
             var options = x.GetRequiredService<IOptions<HttpConsumerOptions<TKey, TValue>>>();
             return new JwtAuthenticationHandler<TKey, TValue>(options, jsonSerializerOptions);
         });
-        services.AddHttpClient<HttpService<TKey, TValue>>().AddHttpMessageHandler<JwtAuthenticationHandler<TKey, TValue>>();
+        services.AddHttpClient<HttpService>().AddHttpMessageHandler<JwtAuthenticationHandler<TKey, TValue>>();
 
         return services.ConfigureKafkaWorker<TKey, TValue, HttpHandler<TKey, TValue>>(section, customConsumerConfig, jsonSerializerOptions);
     }
