@@ -30,7 +30,8 @@ public class RetryResilientKafkaWorker<TKey, TValue> : BaseKafkaWorker<TKey, TVa
 
     protected override async Task<bool> BeforeProcessMessageAsync(CancellationToken cancellationToken)
     {
-        if (_resilienceBuilderFactory.GetCircuitBreakerPolicy().CircuitState == CircuitState.Open)
+        var cbPolicy = _resilienceBuilderFactory.GetCircuitBreakerPolicy();
+        if (cbPolicy != null && cbPolicy.CircuitState == CircuitState.Open)
         {
             await Task.Delay(5000, cancellationToken);
             return false;

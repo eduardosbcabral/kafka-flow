@@ -6,6 +6,7 @@ using KafkaFlow.Producer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 
 namespace KafkaFlow.Consumer;
@@ -19,7 +20,19 @@ public static class ServiceCollectionConsumerExtensions
         JsonSerializerOptions? jsonSerializerOptions = null)
         where THandler : class, IKafkaHandler<TKey, TValue>
     {
-        services.Configure<ConsumerOptions<TKey, TValue>>(section);
+        services
+            .AddOptions<ConsumerOptions<TKey, TValue>>()
+            .Bind(section)
+            .Validate(x =>
+            {
+                var isValid = x.Validate(out var errorMessage);
+                if (!isValid)
+                {
+                    throw new ValidationException($"ConsumerOptions<{typeof(TKey).Name}><{typeof(TValue).Name}>: {errorMessage}");
+                }
+
+                return true;
+            });
 
         if (customConsumerConfig is not null)
         {
@@ -31,18 +44,19 @@ public static class ServiceCollectionConsumerExtensions
 
         services.AddTransient<IKafkaHandler<TKey, TValue>, THandler>();
 
-        _ = bool.TryParse(section["Resilience:Enabled"], out var resilienceEnabled);
+        var consumerOptions = section.Get<ConsumerOptions<TKey, TValue>>();
 
-        if (resilienceEnabled)
+        services.AddSingleton<IResilienceBuilderFactory<TKey, TValue>, ResilienceBuilderFactory<TKey, TValue>>();
+        services.AddHostedService<MainResilientKafkaWorker<TKey, TValue>>();
+
+        if (consumerOptions.Resilience.Retry.ShouldPublishToRetry() || consumerOptions.Resilience.Retry.ShouldPublishDirectlyToDeadLetter(consumerOptions.DeadLetter))
         {
-            services.AddSingleton<IResilienceBuilderFactory<TKey, TValue>, ResilienceBuilderFactory<TKey, TValue>>();
             services.AddKafkaProducer<TKey, TValue>(section, jsonSerializerOptions);
-            services.AddHostedService<MainResilientKafkaWorker<TKey, TValue>>();
-            services.AddHostedService<RetryResilientKafkaWorker<TKey, TValue>>();
         }
-        else
+
+        if (consumerOptions.Resilience.Retry.ShouldPublishToRetry())
         {
-            services.AddHostedService<KafkaWorker<TKey, TValue>>();
+            services.AddHostedService<RetryResilientKafkaWorker<TKey, TValue>>();
         }
 
         return services;

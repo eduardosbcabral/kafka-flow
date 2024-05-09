@@ -56,7 +56,7 @@ public abstract class BaseKafkaWorker<TKey, TValue> : BackgroundService
         var consumer = _consumerBuilderFactory.Build(_consumerOptions).Build();
 
         consumer.Subscribe(_topic);
-        _logger.LogInformation("Consumer {WorkerType} started on topic {Topic}.", nameof(KafkaWorker<TKey, TValue>), _topic);
+        _logger.LogInformation("Consumer {WorkerName}<{TKeyName}><{TKeyName}> started on topic {Topic}.", GetType().Name, typeof(TKey).Name, typeof(TValue).Name, _topic);
 
         try
         {
@@ -77,7 +77,6 @@ public abstract class BaseKafkaWorker<TKey, TValue> : BackgroundService
                         try
                         {
                             await ProcessMessageAsync(consumer, handler, result, stoppingToken).ConfigureAwait(false);
-                            _logger.LogInformation("Successfully processed message at {TopicPartitionOffset}.", result.TopicPartitionOffset);
                             consumer.Commit(result);
                         }
                         catch (Exception ex)

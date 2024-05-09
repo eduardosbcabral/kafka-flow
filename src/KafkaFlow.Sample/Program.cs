@@ -21,12 +21,12 @@ var builder = Host.CreateDefaultBuilder(args)
             x.AutoOffsetReset = AutoOffsetReset.Latest;
         });
 
-        var consumer2Config = host.Configuration.GetRequiredSection("Consumer2");
-        services.ConfigureHttpKafkaWorker<string, AnotherSampleMessage>(consumer2Config, x =>
-        {
-            x.EnableAutoCommit = false;
-            x.AutoOffsetReset = AutoOffsetReset.Latest;
-        });
+        //var consumer2Config = host.Configuration.GetRequiredSection("Consumer2");
+        //services.ConfigureHttpKafkaWorker<string, AnotherSampleMessage>(consumer2Config, x =>
+        //{
+        //    x.EnableAutoCommit = false;
+        //    x.AutoOffsetReset = AutoOffsetReset.Latest;
+        //});
     });
 
 var host = builder.Build();

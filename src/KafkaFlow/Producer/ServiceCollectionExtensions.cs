@@ -13,10 +13,13 @@ public static class ServiceCollectionProducerExtensions
 {
     public static IServiceCollection AddKafkaProducer<TKey, TValue>(
         this IServiceCollection services,
-        IConfigurationSection configurationSection,
+        IConfigurationSection section,
         JsonSerializerOptions? jsonSerializerOptions = null)
     {
-        services.Configure<ProducerOptions<TKey, TValue>>(configurationSection);
+        services
+            .AddOptions<ProducerOptions<TKey, TValue>>()
+            .Bind(section);
+
         services.AddSingleton(x => new KafkaSerializer<TValue>(jsonSerializerOptions));
         services.TryAddSingleton<IKafkaProducerBuilderFactory<TKey, TValue>, KafkaProducerBuilderFactory<TKey, TValue>>();
         services.TryAddSingleton<IMessageProducer<TKey, TValue>, KafkaMessageProducer<TKey, TValue>>();

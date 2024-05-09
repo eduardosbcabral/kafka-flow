@@ -29,7 +29,8 @@ public class MainResilientKafkaWorker<TKey, TValue> : BaseKafkaWorker<TKey, TVal
 
     protected override async Task<bool> BeforeProcessMessageAsync(CancellationToken cancellationToken)
     {
-        if (_resilienceBuilderFactory.GetCircuitBreakerPolicy().CircuitState == CircuitState.Open)
+        var cbPolicy = _resilienceBuilderFactory.GetCircuitBreakerPolicy();
+        if (cbPolicy != null && cbPolicy.CircuitState == CircuitState.Open)
         {
             await Task.Delay(5000, cancellationToken);
             return false;
@@ -50,6 +51,7 @@ public class MainResilientKafkaWorker<TKey, TValue> : BaseKafkaWorker<TKey, TVal
         await _resilienceBuilderFactory.GetAsyncPolicy().ExecuteAsync(async (ctx, ct) =>
         {
             await handler.HandleAsync(consumeContext, cancellationToken).ConfigureAwait(false);
+            _logger.LogInformation("Message processed successfully.");
         }, context, cancellationToken).ConfigureAwait(false);
     }
 }
