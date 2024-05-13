@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace KafkaFlow.Http;
+namespace KafkaFlow.Sample.Http;
 
 internal class JwtAuthenticationHandler<TKey, TValue> : DelegatingHandler
 {
@@ -13,10 +13,12 @@ internal class JwtAuthenticationHandler<TKey, TValue> : DelegatingHandler
     private static DateTime TokenExpiryTime;
     private static readonly SemaphoreSlim TokenRefreshSemaphore = new(1, 1);
 
-    private readonly HttpOptions _http;
+    private readonly JwtHttpOptions _http;
     private readonly JsonSerializerOptions? _jsonSerializerOptions;
 
-    public JwtAuthenticationHandler(IOptions<HttpConsumerOptions<TKey, TValue>> httpConsumerOptions, JsonSerializerOptions? jsonSerializerOptions)
+    public JwtAuthenticationHandler(
+        IOptions<HttpConsumerOptions<TKey, TValue, JwtHttpOptions>> httpConsumerOptions,
+        JsonSerializerOptions? jsonSerializerOptions = null)
     {
         _http = httpConsumerOptions.Value.Http;
         _jsonSerializerOptions = jsonSerializerOptions ?? new()

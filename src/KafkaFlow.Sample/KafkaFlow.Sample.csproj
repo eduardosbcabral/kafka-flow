@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\KafkaFlow.Common\KafkaFlow.csproj" />
     <ProjectReference Include="..\KafkaFlow.Http\KafkaFlow.Http.csproj" />
     <ProjectReference Include="..\KafkaFlow\KafkaFlow.csproj" />
   </ItemGroup>

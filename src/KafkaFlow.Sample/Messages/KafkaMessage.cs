@@ -1,4 +1,4 @@
-﻿namespace KafkaFlow;
+﻿namespace KafkaFlow.Sample.Messages;
 
 public class KafkaMessage<TPayload> 
 {

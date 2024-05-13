@@ -10,10 +10,10 @@ namespace KafkaFlow.Sample.Handlers;
 class HttpHandler<TKey, TValue> : IKafkaHandler<TKey, TValue>
 {
     private readonly ILogger<HttpHandler<TKey, TValue>> _logger;
-    private readonly HttpService _httpService;
-    private readonly HttpConsumerOptions<TKey, TValue> _consumerOptions;
+    private readonly HttpService<TKey, TValue> _httpService;
+    private readonly HttpConsumerOptions<TKey, TValue, HttpOptions> _consumerOptions;
 
-    public HttpHandler(ILogger<HttpHandler<TKey, TValue>> logger, IOptions<HttpConsumerOptions<TKey, TValue>> consumerOptions, HttpService httpService)
+    public HttpHandler(ILogger<HttpHandler<TKey, TValue>> logger, IOptions<HttpConsumerOptions<TKey, TValue, HttpOptions>> consumerOptions, HttpService<TKey, TValue> httpService)
     {
         _logger = logger;
         _consumerOptions = consumerOptions.Value;
@@ -22,7 +22,7 @@ class HttpHandler<TKey, TValue> : IKafkaHandler<TKey, TValue>
 
     public async Task HandleAsync(ConsumeContext<TKey, TValue> consumeContext, CancellationToken cancellationToken)
     {
-        await _httpService.SendRequestAsync(_consumerOptions.Http.EndpointUrl, consumeContext.Value).ConfigureAwait(false);
+        await _httpService.SendRequestAsync(_consumerOptions.Http.EndpointUrl, consumeContext.Value, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Http Handler executed.");
     }
 }
