@@ -1,5 +1,4 @@
-﻿using KafkaFlow.Options;
-using KafkaFlow.Producer;
+﻿using KafkaFlow.Producer;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -86,24 +85,24 @@ public class ResilienceBuilderFactory<TKey, TValue> : IResilienceBuilderFactory<
                 });
 
             asyncPolicies = fallbackPolicy.WrapAsync(retryPolicy);
-        }
 
-        if (circuitBreaker.Enabled)
-        {
-            var circuitBreakerPolicy = Policy
-                .Handle<Exception>()
-                .CircuitBreakerAsync(
-                    exceptionsAllowedBeforeBreaking: circuitBreaker.ExceptionsAllowedBeforeBreaking,
-                    durationOfBreak: TimeSpan.FromSeconds(circuitBreaker.DurationOfBreakInSeconds),
-                    onBreak: (ex, breakDelay) =>
-                    {
-                        logger.LogWarning("Circuit breaker opened for {TotalSeconds} seconds due to: {Message}", breakDelay.TotalSeconds, ex.Message);
-                    },
-                    onReset: () => logger.LogInformation("Circuit breaker reset."),
-                    onHalfOpen: () => logger.LogInformation("Circuit breaker is half-open."));
+            if (circuitBreaker.Enabled)
+            {
+                var circuitBreakerPolicy = Policy
+                    .Handle<Exception>()
+                    .CircuitBreakerAsync(
+                        exceptionsAllowedBeforeBreaking: circuitBreaker.ExceptionsAllowedBeforeBreaking,
+                        durationOfBreak: TimeSpan.FromSeconds(circuitBreaker.DurationOfBreakInSeconds),
+                        onBreak: (ex, breakDelay) =>
+                        {
+                            logger.LogWarning("Circuit breaker opened for {TotalSeconds} seconds due to: {Message}", breakDelay.TotalSeconds, ex.Message);
+                        },
+                        onReset: () => logger.LogInformation("Circuit breaker reset."),
+                        onHalfOpen: () => logger.LogInformation("Circuit breaker is half-open."));
 
-            asyncPolicies = asyncPolicies.WrapAsync(circuitBreakerPolicy);
-            _circuitBreakerPolicy = circuitBreakerPolicy;
+                asyncPolicies = asyncPolicies.WrapAsync(circuitBreakerPolicy);
+                _circuitBreakerPolicy = circuitBreakerPolicy;
+            }
         }
 
         _asyncPolicy = asyncPolicies != null ? asyncPolicies : fallbackPolicy;

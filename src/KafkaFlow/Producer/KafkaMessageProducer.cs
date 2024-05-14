@@ -13,7 +13,7 @@ public class KafkaMessageProducer<TKey, TValue> : IMessageProducer<TKey, TValue>
 
     public KafkaMessageProducer(
         ILogger<KafkaMessageProducer<TKey, TValue>> logger,
-        IKafkaProducerBuilderFactory<TKey, TValue> kafkaProducerBuilder)
+        IProducerBuilderFactory<TKey, TValue> kafkaProducerBuilder)
     {
         _logger = logger;
         _producer = kafkaProducerBuilder.Build();

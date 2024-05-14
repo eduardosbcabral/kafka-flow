@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace KafkaFlow.Options;
+namespace KafkaFlow;
 
 public class ResilienceOptions : IKakfaFlowOptions
 {

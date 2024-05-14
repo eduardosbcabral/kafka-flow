@@ -1,6 +1,4 @@
-﻿using KafkaFlow.Options;
-
-namespace KafkaFlow.Http.Options;
+﻿namespace KafkaFlow.Http.Options;
 
 public class HttpConsumerOptions<TKey, TValue, THttpOptions> : ConsumerOptions<TKey, TValue> where THttpOptions : HttpOptions
 {

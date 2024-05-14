@@ -1,6 +1,5 @@
 ﻿using KafkaFlow.Http;
 using KafkaFlow.Http.Options;
-using KafkaFlow.Options;
 using KafkaFlow.Sample.Handlers;
 
 using Microsoft.Extensions.Configuration;

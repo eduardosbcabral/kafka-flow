@@ -1,7 +1,5 @@
 ﻿using Confluent.Kafka;
-
 using KafkaFlow.Consumer.Factories;
-using KafkaFlow.Options;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -53,7 +51,7 @@ public abstract class BaseKafkaWorker<TKey, TValue> : BackgroundService
 
         using var scope = _serviceScopeFactory.CreateScope();
         var handler = scope.ServiceProvider.GetRequiredService<IKafkaHandler<TKey, TValue>>();
-        var consumer = _consumerBuilderFactory.Build(_consumerOptions).Build();
+        var consumer = _consumerBuilderFactory.Build().Build();
 
         consumer.Subscribe(_topic);
         _logger.LogInformation("Consumer {WorkerName}<{TKeyName}><{TKeyName}> started on topic {Topic}.", GetType().Name, typeof(TKey).Name, typeof(TValue).Name, _topic);

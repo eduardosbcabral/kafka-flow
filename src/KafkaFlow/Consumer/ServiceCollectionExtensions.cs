@@ -1,6 +1,5 @@
 ﻿using KafkaFlow.Consumer.Factories;
 using KafkaFlow.Consumer.Workers;
-using KafkaFlow.Options;
 using KafkaFlow.Producer;
 
 using Microsoft.Extensions.Configuration;

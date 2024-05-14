@@ -1,6 +1,4 @@
-﻿using KafkaFlow.Options;
-
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -20,7 +18,7 @@ public static class ServiceCollectionProducerExtensions
             .Bind(section);
 
         services.AddSingleton(x => new KafkaSerializer<TValue>(jsonSerializerOptions));
-        services.TryAddSingleton<IKafkaProducerBuilderFactory<TKey, TValue>, KafkaProducerBuilderFactory<TKey, TValue>>();
+        services.TryAddSingleton<IProducerBuilderFactory<TKey, TValue>, ProducerBuilderFactory<TKey, TValue>>();
         services.TryAddSingleton<IMessageProducer<TKey, TValue>, KafkaMessageProducer<TKey, TValue>>();
 
         return services;

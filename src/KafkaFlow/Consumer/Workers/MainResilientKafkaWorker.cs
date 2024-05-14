@@ -1,6 +1,5 @@
 ﻿using Confluent.Kafka;
 using KafkaFlow.Consumer.Factories;
-using KafkaFlow.Options;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

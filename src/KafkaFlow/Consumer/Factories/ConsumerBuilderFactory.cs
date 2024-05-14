@@ -1,18 +1,29 @@
 ﻿using Confluent.Kafka;
 
-using KafkaFlow.Options;
+using Microsoft.Extensions.Options;
 
 namespace KafkaFlow.Consumer.Factories;
 
-internal class ConsumerBuilderFactory<TKey, TValue>(KafkaDeserializer<TValue> kafkaDeserializer) : IConsumerBuilderFactory<TKey, TValue>
+public class ConsumerBuilderFactory<TKey, TValue> : IConsumerBuilderFactory<TKey, TValue>
 {
-    public ConsumerBuilder<TKey, TValue> Build(ConsumerOptions<TKey, TValue> consumerOptions)
+    private readonly KafkaDeserializer<TValue> _kafkaDeserializer;
+    private readonly ConsumerOptions<TKey, TValue> _consumerOptions;
+
+    public ConsumerBuilderFactory(IOptions<ConsumerOptions<TKey, TValue>> consumerOptions, KafkaDeserializer<TValue> kafkaDeserializer)
     {
-        return new ConsumerBuilder<TKey, TValue>(consumerOptions).SetValueDeserializer(kafkaDeserializer);
+        ArgumentNullException.ThrowIfNull(consumerOptions, nameof(consumerOptions));
+        ArgumentNullException.ThrowIfNull(kafkaDeserializer, nameof(kafkaDeserializer));
+        _kafkaDeserializer = kafkaDeserializer;
+        _consumerOptions = consumerOptions.Value;
+    }
+
+    public ConsumerBuilder<TKey, TValue> Build()
+    {
+        return new ConsumerBuilder<TKey, TValue>(_consumerOptions).SetValueDeserializer(_kafkaDeserializer);
     }
 }
 
 public interface IConsumerBuilderFactory<TKey, TValue>
 {
-    ConsumerBuilder<TKey, TValue> Build(ConsumerOptions<TKey, TValue> consumerOptions);
+    ConsumerBuilder<TKey, TValue> Build();
 }

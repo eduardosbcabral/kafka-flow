@@ -1,6 +1,6 @@
 ﻿using Confluent.Kafka;
 
-namespace KafkaFlow.Options;
+namespace KafkaFlow;
 
 public class ProducerOptions<TKey, TValue> : ProducerConfig
 {

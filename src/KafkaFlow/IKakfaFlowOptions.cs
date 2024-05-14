@@ -1,4 +1,4 @@
-﻿namespace KafkaFlow.Options;
+﻿namespace KafkaFlow;
 
 public interface IKakfaFlowOptions
 {
