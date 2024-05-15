@@ -1,0 +1,24 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+      - '!*-alpha*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        
+      - run: dotnet build -c Release src/KafkaFlow.sln
+      
+      - name: Create the KafkaFlow package
+        run: dotnet pack -c Release --no-build -p:Version=${{ github.REF_NAME }} -o src/Release src/KafkaFlow.sln
+
+      - name: Publish the KafkaFlow package
+        run: dotnet nuget push src/Release/*.nupkg --api-key ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
