@@ -7,7 +7,7 @@
     <Summary>A kafka lib to help with the consumption workflow with resilience support.</Summary>
     <Description>A kafka lib to help with the consumption workflow with resilience support.</Description>
     <AssemblyName>KafkaFlow</AssemblyName>
-    <PackageId>KafkaFlow.EC</PackageId>
+    <PackageId>KafkaFlowR</PackageId>
     <Authors>Eduardo Cabral</Authors>
     <RepositoryUrl>https://github.com/eduardosbcabral/kafka-flow</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
