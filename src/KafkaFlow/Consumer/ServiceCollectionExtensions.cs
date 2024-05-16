@@ -12,14 +12,38 @@ namespace KafkaFlow.Consumer;
 
 public static class ServiceCollectionConsumerExtensions
 {
-    public static IServiceCollection ConfigureKafkaWorker<TKey, TValue, THandler>(
+    public static IKafkaWorkerBuilder<TKey, TValue> ConfigureKafkaWorker<TKey, TValue>(
         this IServiceCollection services,
-        IConfigurationSection section,
-        Action<ConsumerOptions<TKey, TValue>>? customConsumerConfig = null,
-        JsonSerializerOptions? jsonSerializerOptions = null)
-        where THandler : class, IKafkaHandler<TKey, TValue>
+        IConfigurationSection section)
     {
-        services
+        return new KafkaWorkerBuilder<TKey, TValue>(services, section);
+    }
+}
+
+public interface IKafkaWorkerBuilder<TKey, TValue> : IServiceCollection
+{
+    IServiceCollection Services { get; }
+    IConfigurationSection Section { get; }
+    JsonSerializerOptions? JsonSerializerOptions { get; }
+    IKafkaWorkerBuilder<TKey, TValue> ConfigureConsumerOptions(Action<ConsumerOptions<TKey, TValue>> customConsumerConfig);
+    IKafkaWorkerBuilder<TKey, TValue> WithCustomSerialization(JsonSerializerOptions jsonSerializerOptions);
+    IKafkaWorkerBuilder<TKey, TValue> WithHandler<THandler>() where THandler : class, IKafkaHandler<TKey, TValue>;
+    void Configure();
+}
+
+public class KafkaWorkerBuilder<TKey, TValue> : ServiceCollection, IKafkaWorkerBuilder<TKey, TValue>
+{
+    public IServiceCollection Services { get; protected set; }
+    public IConfigurationSection Section { get; protected set; }
+    public JsonSerializerOptions? JsonSerializerOptions { get; protected set; }
+
+    private bool _handlerConfigured = false;
+
+    public KafkaWorkerBuilder(IServiceCollection services, IConfigurationSection section)
+    {
+        Services = services;
+
+        Services
             .AddOptions<ConsumerOptions<TKey, TValue>>()
             .Bind(section)
             .Validate(x =>
@@ -33,31 +57,53 @@ public static class ServiceCollectionConsumerExtensions
                 return true;
             });
 
-        if (customConsumerConfig is not null)
+        Section = section;
+    }
+
+    public IKafkaWorkerBuilder<TKey, TValue> ConfigureConsumerOptions(Action<ConsumerOptions<TKey, TValue>> customConsumerConfig)
+    {
+        Services.PostConfigure(customConsumerConfig);
+        return this;
+    }
+
+    public IKafkaWorkerBuilder<TKey, TValue> WithCustomSerialization(JsonSerializerOptions jsonSerializerOptions)
+    {
+        JsonSerializerOptions = jsonSerializerOptions;
+        return this;
+    }
+
+    public IKafkaWorkerBuilder<TKey, TValue> WithHandler<THandler>()
+        where THandler : class, IKafkaHandler<TKey, TValue>
+    {
+        Services.AddTransient<IKafkaHandler<TKey, TValue>, THandler>();
+        _handlerConfigured = true;
+        return this;
+    }
+
+    public void Configure()
+    {
+        if (!_handlerConfigured)
         {
-            services.PostConfigure(customConsumerConfig);
+            throw new ValidationException($"KafkaWorker<{typeof(TKey).Name}><{typeof(TValue).Name}>: Handler not configured.");
         }
 
-        services.AddSingleton<IConsumerBuilderFactory<TKey, TValue>, ConsumerBuilderFactory<TKey, TValue>>();
-        services.AddSingleton(x => new KafkaDeserializer<TValue>(jsonSerializerOptions));
+        Services.AddSingleton<IConsumerBuilderFactory<TKey, TValue>, ConsumerBuilderFactory<TKey, TValue>>();
+        Services.AddSingleton(x => new KafkaDeserializer<TValue>(JsonSerializerOptions));
 
-        services.AddTransient<IKafkaHandler<TKey, TValue>, THandler>();
+        var consumerOptions = Section.Get<ConsumerOptions<TKey, TValue>>();
+        ArgumentNullException.ThrowIfNull(consumerOptions, nameof(consumerOptions));
 
-        var consumerOptions = section.Get<ConsumerOptions<TKey, TValue>>();
-
-        services.AddSingleton<IResilienceBuilderFactory<TKey, TValue>, ResilienceBuilderFactory<TKey, TValue>>();
-        services.AddHostedService<MainResilientKafkaWorker<TKey, TValue>>();
+        Services.AddSingleton<IResilienceBuilderFactory<TKey, TValue>, ResilienceBuilderFactory<TKey, TValue>>();
+        Services.AddHostedService<MainResilientKafkaWorker<TKey, TValue>>();
 
         if (consumerOptions.Resilience.Retry.ShouldPublishToRetry() || consumerOptions.Resilience.Retry.ShouldPublishDirectlyToDeadLetter(consumerOptions.DeadLetter))
         {
-            services.AddKafkaProducer<TKey, TValue>(section, jsonSerializerOptions);
+            Services.AddKafkaProducer<TKey, TValue>(Section, JsonSerializerOptions);
         }
 
         if (consumerOptions.Resilience.Retry.ShouldPublishToRetry())
         {
-            services.AddHostedService<RetryResilientKafkaWorker<TKey, TValue>>();
+            Services.AddHostedService<RetryResilientKafkaWorker<TKey, TValue>>();
         }
-
-        return services;
     }
 }

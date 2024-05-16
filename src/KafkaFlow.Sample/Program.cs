@@ -1,13 +1,9 @@
 using Confluent.Kafka;
 
-using KafkaFlow;
 using KafkaFlow.Consumer;
-using KafkaFlow.Http.Options;
 using KafkaFlow.Sample.Handlers;
 using KafkaFlow.Sample.Http;
 using KafkaFlow.Sample.Messages;
-
-using Microsoft.Extensions.Options;
 
 using System.Text.Json;
 
@@ -21,31 +17,41 @@ var builder = Host.CreateDefaultBuilder(args)
         });
 
         var consumer1Config = host.Configuration.GetRequiredSection("Consumer1");
-        services.ConfigureKafkaWorker<string, KafkaMessage<SampleMessage>, SampleMessageHandler>(consumer1Config, x =>
-        {
-            x.EnableAutoCommit = false;
-            x.AutoOffsetReset = AutoOffsetReset.Latest;
-        });
+        services.ConfigureKafkaWorker<string, KafkaMessage<SampleMessage>>(consumer1Config)
+            .ConfigureConsumerOptions(x =>
+            {
+                x.EnableAutoCommit = false;
+                x.AutoOffsetReset = AutoOffsetReset.Latest;
+            })
+            .WithHandler<SampleMessageHandler>()
+            .Configure();
 
         var consumer2Config = host.Configuration.GetRequiredSection("Consumer2");
-        services.ConfigureDefaultHttpKafkaWorker<string, AnotherSampleMessage>(consumer2Config, x =>
-        {
-            x.EnableAutoCommit = false;
-            x.AutoOffsetReset = AutoOffsetReset.Latest;
-        }, 
-        new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        services.ConfigureHttpKafkaWorker<string, AnotherSampleMessage>(consumer2Config)
+            .ConfigureConsumerOptions(x =>
+            {
+                x.EnableAutoCommit = false;
+                x.AutoOffsetReset = AutoOffsetReset.Latest;
+            })
+            .WithCustomSerialization(new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            })
+            .WithHandler<AnotherSampleMessageHandler>()
+            .Configure();
 
         // Jwt Authentication Example
         var consumer3Config = host.Configuration.GetRequiredSection("Consumer3");
-        services.AddSingleton<JwtAuthenticationHandler<string, OtherSampleMessage>>();
-        services.ConfigureCustomHttpKafkaWorker<string, OtherSampleMessage, JwtHttpOptions>(consumer3Config, x =>
-        {
-            x.EnableAutoCommit = false;
-            x.AutoOffsetReset = AutoOffsetReset.Latest;
-        }).AddHttpMessageHandler<JwtAuthenticationHandler<string, OtherSampleMessage>>();
+        services.ConfigureHttpKafkaWorker<string, OtherSampleMessage>(consumer3Config)
+            .ConfigureConsumerOptions(x =>
+            {
+                x.EnableAutoCommit = false;
+                x.AutoOffsetReset = AutoOffsetReset.Latest;
+            })
+            .WithCustomHttpOptions<JwtHttpOptions>()
+            .WithHttpMessageHandler<JwtAuthenticationHandler<string, OtherSampleMessage>>()
+            .WithDefaultHttpHandler()
+            .Configure();
     });
 
 var host = builder.Build();
