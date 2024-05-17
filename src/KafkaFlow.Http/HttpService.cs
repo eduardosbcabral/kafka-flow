@@ -2,7 +2,7 @@
 
 namespace KafkaFlow.Http
 {
-    internal class HttpService<TKey, TValue>(HttpClient client)
+    public class HttpService<TKey, TValue>(HttpClient client)
     {
         public async Task<bool> SendRequestAsync(string endpointUrl, object request, CancellationToken cancellationToken = default)
         {

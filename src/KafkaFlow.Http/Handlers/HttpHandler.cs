@@ -20,6 +20,9 @@ class HttpHandler<TKey, TValue> : IKafkaHandler<TKey, TValue>
         _httpService = httpService;
     }
 
+    public Task<bool> BeforeHandleAsync(ConsumeContext<TKey, TValue> consumeContext, CancellationToken cancellationToken)
+        => Task.FromResult(true);
+
     public async Task HandleAsync(ConsumeContext<TKey, TValue> consumeContext, CancellationToken cancellationToken)
     {
         await _httpService.SendRequestAsync(_consumerOptions.Http.EndpointUrl, consumeContext.Value, cancellationToken).ConfigureAwait(false);

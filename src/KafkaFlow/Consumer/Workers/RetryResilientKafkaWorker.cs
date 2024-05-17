@@ -42,6 +42,12 @@ public class RetryResilientKafkaWorker<TKey, TValue> : BaseKafkaWorker<TKey, TVa
     {
         var consumeContext = new ConsumeContext<TKey, TValue>(result.Message);
 
+        if (await handler.BeforeHandleAsync(consumeContext, cancellationToken).ConfigureAwait(false) == false)
+        {
+            _logger.LogInformation("Message ignored.");
+            return;
+        }
+
         var context = new Context
         {
             ["consumeContext"] = consumeContext
