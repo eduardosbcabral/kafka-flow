@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Confluent.Kafka.Extensions.Diagnostics;
 
 using Microsoft.Extensions.Options;
 
@@ -20,7 +21,7 @@ public class ProducerBuilderFactory<TKey, TValue> : IProducerBuilderFactory<TKey
     public IProducer<TKey, TValue> Build()
     {
         var producerBuilder = new ProducerBuilder<TKey, TValue>(_producerOptions.Value).SetValueSerializer(_kafkaSerializer);
-        return producerBuilder.Build();
+        return producerBuilder.BuildWithInstrumentation();
     }
 }
 

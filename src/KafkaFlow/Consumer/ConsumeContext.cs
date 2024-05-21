@@ -24,6 +24,19 @@ public class ConsumeContext<TKey, TValue> : Message<TKey, TValue>, IRequest
         Headers = headers;
     }
 
+    public string GetHeader(string key)
+    {
+        try
+        {
+            var headerEncoded = Headers.GetLastBytes(key);
+            return Encoding.UTF8.GetString(headerEncoded);
+        }
+        catch (Exception)
+        {
+            return string.Empty;
+        }
+    }
+
     public int GetRetryAttempt()
     {
         try

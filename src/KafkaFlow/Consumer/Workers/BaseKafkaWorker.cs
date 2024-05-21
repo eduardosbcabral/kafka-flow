@@ -1,4 +1,6 @@
 ﻿using Confluent.Kafka;
+using Confluent.Kafka.Extensions.Diagnostics;
+
 using KafkaFlow.Consumer.Factories;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -54,7 +56,7 @@ public abstract class BaseKafkaWorker<TKey, TValue> : BackgroundService
         var consumer = _consumerBuilderFactory.Build().Build();
 
         consumer.Subscribe(_topic);
-        _logger.LogInformation("Consumer {WorkerName}<{TKeyName}><{TKeyName}> started on topic {Topic}.", GetType().Name, typeof(TKey).Name, typeof(TValue).Name, _topic);
+        _logger.LogInformation("Consumer {WorkerName}<{TKeyName}><{TKeyName}> started on topic {Topic}.", _consumerOptions.Name, typeof(TKey).Name, typeof(TValue).Name, _topic);
 
         try
         {
@@ -67,21 +69,23 @@ public abstract class BaseKafkaWorker<TKey, TValue> : BackgroundService
 
                 try
                 {
-                    result = consumer.Consume(stoppingToken);
-                    if (result.Message != null)
+                    await consumer.ConsumeWithInstrumentation(async (result, ct) =>
                     {
-                        _logger.LogInformation("Processing message from {TopicPartitionOffset}.", result.TopicPartitionOffset);
+                        if (result?.Message != null)
+                        {
+                            _logger.LogInformation("Processing message from {TopicPartitionOffset}.", result.TopicPartitionOffset);
 
-                        try
-                        {
-                            await ProcessMessageAsync(consumer, handler, result, stoppingToken).ConfigureAwait(false);
-                            consumer.Commit(result);
+                            try
+                            {
+                                await ProcessMessageAsync(consumer, handler, result, ct).ConfigureAwait(false);
+                                consumer.Commit(result);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "Failed to process message at {TopicPartitionOffset}.", result.TopicPartitionOffset);
+                            }
                         }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Failed to process message at {TopicPartitionOffset}.", result.TopicPartitionOffset);
-                        }
-                    }
+                    }, stoppingToken);
                 }
                 catch (ConsumeException e)
                 {

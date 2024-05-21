@@ -1,4 +1,6 @@
-﻿using KafkaFlow.Consumer.Factories;
+﻿using Confluent.Kafka;
+
+using KafkaFlow.Consumer.Factories;
 using KafkaFlow.Consumer.Workers;
 using KafkaFlow.Producer;
 
@@ -58,6 +60,13 @@ public class KafkaWorkerBuilder<TKey, TValue> : ServiceCollection, IKafkaWorkerB
             });
 
         Section = section;
+
+        // Default configurations because the worker does not do auto commit
+        Services.PostConfigure<ConsumerOptions<TKey, TValue>>(x =>
+        {
+            x.EnableAutoCommit = false;
+            x.AutoOffsetReset = AutoOffsetReset.Latest;
+        });
     }
 
     public IKafkaWorkerBuilder<TKey, TValue> ConfigureConsumerOptions(Action<ConsumerOptions<TKey, TValue>> customConsumerConfig)
