@@ -48,7 +48,7 @@ public static class OpenTelemetryExtensions
                         {
                             try
                             {
-                                if (request.Content != null && request.Content.Headers.ContentLength > 0)
+                                if (request.Content != null)
                                 {
                                     var body = await request.Content.ReadAsStringAsync().ConfigureAwait(false);
                                     if (!string.IsNullOrWhiteSpace(body))
@@ -65,13 +65,21 @@ public static class OpenTelemetryExtensions
 
                             try
                             {
-                                if (response.Content != null && response.Content.Headers.ContentLength > 0)
+                                if (response.Content != null)
                                 {
                                     var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                                     if (!string.IsNullOrWhiteSpace(body))
                                     {
                                         activity.SetTag("http.response.body", body);
-                                        activity.SetStatus(ActivityStatusCode.Error, "An error occurred while processing the response.");
+
+                                        if ((int)response.StatusCode >= 400)
+                                        {
+                                            activity.SetStatus(ActivityStatusCode.Error, "An error occurred while processing the response.");
+                                        }
+                                        else
+                                        {
+                                            activity.SetStatus(ActivityStatusCode.Ok, "Response success.");
+                                        }
                                     }
                                 }
                             }

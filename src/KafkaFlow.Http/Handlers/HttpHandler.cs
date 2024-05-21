@@ -25,7 +25,7 @@ class HttpHandler<TKey, TValue> : IKafkaHandler<TKey, TValue>
 
     public async Task HandleAsync(ConsumeContext<TKey, TValue> consumeContext, CancellationToken cancellationToken)
     {
-        await _httpService.SendRequestAsync(_consumerOptions.Http.EndpointUrl, consumeContext.Value, null, cancellationToken).ConfigureAwait(false);
+        await _httpService.SendRequestAsync(_consumerOptions.Http.EndpointUrl, consumeContext.Value, null, null, cancellationToken).ConfigureAwait(false);
         _logger.LogInformation("Http Handler executed.");
     }
 }
